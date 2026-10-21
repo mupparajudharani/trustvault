@@ -19,3 +19,7 @@
 ## Out of Scope
 - Rate limiting (to be added Day 2)
 - HTTPS (handled in production)
+### Mitigation - Day 3
+- Implemented encryption at rest using Fernet (AES-128-CBC + HMAC)
+- All user secrets encrypted before storing in secrets_store
+- Decrypted only on authorized GET request with valid JWT
