@@ -1,4 +1,5 @@
 Flask
+Flask-JWT-Extended
 Flask-Limiter
 cryptography
 gunicorn
