@@ -13,3 +13,12 @@
 - Added @jwt_required protection for /secrets
 - Added audit logging
 Prompt used: Create secure auth with Flask-JWT-Extended and role-based access
+
+## Day 3 - Oct 21
+- Implemented Fernet (symmetric) encryption for secrets at rest
+- Added FERNET_KEY and encrypt/decrypt helper functions in app.py
+- Updated /secrets route to store encrypted values and decrypt on retrieval
+- Updated THREATS.md with data-at-rest threat and mitigation
+- Added `cryptography` to requirements.txt
+Prompt used: How to encrypt secrets at rest in Flask with Fernet and handle key management?
+**What I changed:** Used a fixed Fernet key for hackathon (noted to use env var in prod), added decryption logic in GET /secrets, ensured backward compatibility for old plaintext secrets.
