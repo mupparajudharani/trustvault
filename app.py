@@ -24,6 +24,17 @@ fernet = Fernet(key)
 users = {}
 secrets = {}
 
+@app.route('/')
+def home():
+    return jsonify({
+        "message": "TrustVault API is LIVE 🚀",
+        "status": "Running",
+        "endpoints": ["/register", "/login", "/store", "/retrieve"]
+    })
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok"})
 @app.route('/register', methods=['POST'])
 @limiter.limit("5 per hour")
 def register():
