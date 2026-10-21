@@ -3,11 +3,24 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
 import re
+from cryptography.fernet import Fernet
+import os
+
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "trustvault-hackathon-secret-key-2026"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 jwt = JWTManager(app)
+# --- Day 3: Encryption Setup ---
+FERNET_KEY = b'olZc4IFHP8vi2Gmhl5w0cw7eErPZkO0xZNTbmpGZdIY='
+fernet = Fernet(FERNET_KEY)
+
+def encrypt_secret(data: str) -> str:
+    return fernet.encrypt(data.encode()).decode()
+
+def decrypt_secret(token: str) -> str:
+    return fernet.decrypt(token.encode()).decode()
+
 
 # In-memory store (hackathon demo)
 users = {}
@@ -66,8 +79,9 @@ def add_secret():
     if not secret or len(secret) > 500:
         return jsonify({"error": "secret must be 1-500 chars"}), 400
 
-    secrets_store[username].append(secret)
-    return jsonify({"message": "secret stored"}), 201
+    username = get_jwt_identity()
+    decrypted_secrets = [decrypt_secret(s) for s in secrets_store.get(username, [])]
+    return jsonify({"secrets": decrypted_secrets}), 200
 
 @app.route("/secrets", methods=["GET"])
 @jwt_required()
