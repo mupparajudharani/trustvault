@@ -23,3 +23,15 @@
 - Implemented encryption at rest using Fernet (AES-128-CBC + HMAC)
 - All user secrets encrypted before storing in secrets_store
 - Decrypted only on authorized GET request with valid JWT
+## Day 4 - Rate Limiting & Brute Force Protection
+
+**Threat:** Attackers trying to guess passwords by trying 1000s of passwords per minute (Brute Force Attack).
+
+**Mitigation:**
+- Added Flask-Limiter
+- /login endpoint: 5 requests per minute only
+- /register endpoint: 5 requests per hour only
+- Default: 100 requests per hour per IP
+- This prevents automated attacks and keeps our TrustVault safe.
+
+**Testing:** Try to login 6 times in 1 minute -> 6th time will show "429 Too Many Requests" - Attack blocked!
