@@ -1,38 +1,18 @@
-# TrustVault - Secure Document Sharing Platform
+## Live URL
+https://trustvault-2059.onrender.com
 
-🔴 **LIVE API:** https://trustvault-2059.onrender.com
+## Demo Credentials
+admin / admin123 (admin role)
+owner / owner123 (owner role)
+viewer / viewer123 (viewer role)
 
-## Test Accounts (For Judges)
-- **Admin:** admin / admin123 - Full access
-- **Owner:** owner / owner123 - Can upload, grant, revoke
-- **Viewer:** viewer / viewer123 - Only granted docs
+## How to Run Locally
+pip install -r requirements.txt
+python app.py
 
-## Quick Test
-Base URL: https://trustvault-2059.onrender.com
+## Permission Model (in my own words)
+I implemented 3 roles: Owner can upload, delete, grant, revoke his docs. Viewer can only access if granted. Admin can see audit logs and all docs but still needs grant? Actually admin bypass. All checks server-side via check_access() on every request - no frontend trust. Revocation is immediate delete from permissions table.
 
-1. Login: POST /login {"username":"owner","password":"owner123"} -> get token
-2. Upload: POST /upload Header: Bearer TOKEN Body: {"name":"Contract.pdf","content":"Secret","category":"legal"}
-3. Grant: POST /documents/{id}/grant {"username":"viewer","permission":"read"}
-
-## Security Features
-✅ JWT Bearer Auth
-✅ User Isolation - Cannot access others docs without grant
-✅ RBAC - admin > owner > viewer
-✅ Grant/Revoke per document
-✅ No IDOR Vulnerability
-✅ Automated Test: python test_security.py
-
-## API Endpoints
-- POST /login
-- POST /upload
-- GET /documents
-- GET /documents/{id}
-- POST /documents/{id}/grant
-- POST /documents/{id}/revoke
-- DELETE /documents/{id}
-
-## Docs
-- PROMPTS.md - AI prompts
-- THREATS.md - Threat model
-- test_security.py - Security isolation test
-- Live: https://trustvault-2059.onrender.com
+## What I Built / Did NOT Build
+Built: JWT auth, per-doc grant/revoke, audit trail, validation, UUID docs, search by name/owner/category/date.
+Did NOT Build: Rate limiting, encryption at rest, full-text content search (only metadata) - out of scope for MVP.
