@@ -1,18 +1,23 @@
-## Live URL
-https://trustvault-2059.onrender.com
+# TrustVault - Secure Document Sharing
 
-## Demo Credentials
-admin / admin123 (admin role)
-owner / owner123 (owner role)
-viewer / viewer123 (viewer role)
+Live URL: https://trustvault-2059.onrender.com
 
-## How to Run Locally
+## Test Accounts
+Password for all: password123
+
+- Admin: admin@trustvault.com / password123
+- Owner: owner@trustvault.com / password123
+- Viewer: viewer@trustvault.com / password123
+
+## Setup
+git clone https://github.com/mupparajudharani/trustvault.git
 pip install -r requirements.txt
 python app.py
 
-## Permission Model (in my own words)
-I implemented 3 roles: Owner can upload, delete, grant, revoke his docs. Viewer can only access if granted. Admin can see audit logs and all docs but still needs grant? Actually admin bypass. All checks server-side via check_access() on every request - no frontend trust. Revocation is immediate delete from permissions table.
+## API Docs
+See API_DOCS.md - Owner can grant/revoke, Viewer only reads if granted, Admin sees audit logs.
 
-## What I Built / Did NOT Build
-Built: JWT auth, per-doc grant/revoke, audit trail, validation, UUID docs, search by name/owner/category/date.
-Did NOT Build: Rate limiting, encryption at rest, full-text content search (only metadata) - out of scope for MVP.
+## Security
+- Server checks permission on every download
+- Denied attempts logged in audit trail
+- No access = 403
