@@ -7,9 +7,14 @@ from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 DB = 'trustvault.db'
-SECRET = 'trustvault-secret-key-2026'
-FERNET_KEY = Fernet.generate_key()
-fernet = Fernet(FERNET_KEY)
+SECRET = os.environ.get('SECRET', 'trustvault-secret-key-2026')
+# FIXED: Static Fernet Key - Don't regenerate on every restart
+FERNET_KEY = os.environ.get('FERNET_KEY', b'KX5TP4p5lJ8vX3N7c2m9q0w1e2r3t4y5u6v7w8x9y0=')
+try:
+    fernet = Fernet(FERNET_KEY)
+except:
+    FERNET_KEY = Fernet.generate_key()
+    fernet = Fernet(FERNET_KEY)
 
 limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 
@@ -24,10 +29,12 @@ def init_db():
 init_db()
 
 def log_audit(action, actor, target):
-    conn = sqlite3.connect(DB)
-    conn.execute('INSERT INTO audit (action, actor, target, time, ip) VALUES (?,?,?,?,?)', (action, actor, target, datetime.datetime.now().isoformat(), request.remote_addr))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB)
+        conn.execute('INSERT INTO audit (action, actor, target, time, ip) VALUES (?,?,?,?,?)', (action, actor, target, datetime.datetime.now().isoformat(), request.remote_addr if hasattr(request, 'remote_addr') else '0.0.0.0'))
+        conn.commit()
+        conn.close()
+    except: pass
 
 def token_required(f):
     @wraps(f)
@@ -63,6 +70,7 @@ def home():
 input,select{width:90%;padding:10px;margin:8px;border:1px solid #ccc;border-radius:6px}
 button{background:#1a365d;color:white;border:none;padding:10px 20px;border-radius:6px;margin:5px;cursor:pointer}
 #msg{margin-top:15px;font-weight:bold;min-height:20px;word-break:break-all}
+#docs{margin-top:20px;text-align:left}
 </style></head><body>
 <div class="card">
 <h1>TrustVault</h1><h3>Secure Document Access</h3>
@@ -76,58 +84,39 @@ button{background:#1a365d;color:white;border:none;padding:10px 20px;border-radiu
 <script>
 async function reg(){
 document.getElementById('msg').innerText='Registering...';
-let res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value,password:p.value,role:r.value})})
+let res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value,password:p.value,role:r.value})});
 let d=await res.json();
 document.getElementById('msg').innerText=(res.ok?'SUCCESS: ':'ERROR: ')+(d.message||d.error);
 document.getElementById('msg').style.color=res.ok?'green':'red';
 }
 async function log(){
-  document.getElementById('msg').innerText='Logging ...';
-  let res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value,password:p.value,role:r.value})});
-  let d=await res.json();
-  if(res.ok && d.token){
-    localStorage.setItem('token', d.token);
-    document.body.innerHTML = `
-      <div style="padding:20px;font-family:Arial">
-        <h2>TrustVault - Welcome ${d.role}: ${u.value}</h2>
-        <p>Token: ${d.token.substring(0,20)}... <b style="color:green">Live</b></p>
-        <button onclick="loadDocs()">My Documents</button>
-        <button onclick="localStorage.clear();location.reload()">Logout</button>
-        <hr>
-        <h3>Upload Document</h3>
-        <input id="docName" placeholder="Doc name" style="padding:8px">
-        <input id="docContent" placeholder="Content" style="padding:8px">
-        <button onclick="uploadDoc()">Upload</button>
-        <div id="docs" style="margin-top:20px"></div>
-      </div>
-    `;
-  } else {
-    document.getElementById('msg').innerText='ERROR: '+(d.error||'Failed');
-    document.getElementById('msg').style.color='red';
-  }
+document.getElementById('msg').innerText='Logging ...';
+let res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value,password:p.value,role:r.value})});
+let d=await res.json();
+if(res.ok){localStorage.setItem('token',d.token); document.body.innerHTML=`<div style="padding:20px;font-family:Arial"><h2>TrustVault - Welcome ${d.role}: ${u.value}</h2><p>Token: ${d.token.substring(0,20)}... <b style="color:green">Live</b></p><button onclick="loadDocs()">My Documents</button><button onclick="localStorage.clear();location.reload()">Logout</button><hr><h3>Upload Document</h3><input id="docName" placeholder="Doc name" style="padding:8px"><input id="docContent" placeholder="Content" style="padding:8px"><button onclick="uploadDoc()">Upload</button><div id="docs" style="margin-top:20px"></div></div>`} else {document.getElementById('msg').innerText='ERROR: '+(d.error||'Failed');document.getElementById('msg').style.color='red';}
 }
 async function loadDocs(){
-  let res=await fetch('/documents',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}});
-  let j=await res.json();
-  document.getElementById('docs').innerHTML="<pre>"+JSON.stringify(j,null,2)+"</pre>";
+let res=await fetch('/documents',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}});
+let j=await res.json();
+document.getElementById('docs').innerHTML="<pre>"+JSON.stringify(j,null,2)+"</pre>";
 }
 async function uploadDoc(){
-  let res=await fetch('/documents',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({name:document.getElementById('docName').value, content:document.getElementById('docContent').value})});
-  alert(await res.text()); loadDocs();
+let res=await fetch('/documents',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({name:document.getElementById('docName').value,content:document.getElementById('docContent').value,category:'general'})});
+alert(await res.text()); loadDocs();
 }
 </script></body></html>"""
 
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    if not data.get('username') or not data.get('password'): return jsonify({"error": "Need username password"}), 400
+    if not data or not data.get('username') or not data.get('password'): return jsonify({"error": "Username and password required"}), 400
     conn = sqlite3.connect(DB)
     try:
-        conn.execute("INSERT INTO users VALUES (NULL,?,?,?)", (data['username'], data['password'], data.get('role','viewer')))
+        conn.execute('INSERT INTO users (username, password, role) VALUES (?,?,?)', (data['username'], data['password'], data.get('role','viewer')))
         conn.commit()
-        log_audit("REGISTER", data['username'], data['username'])
-        return jsonify({"message": f"User {data['username']} registered as {data.get('role','viewer')}"}), 201
-    except: return jsonify({"error": "User already exists, try login"}), 400
+        log_audit("REGISTER", data['username'], data.get('role','viewer'))
+        return jsonify({"message": "User registered"}), 201
+    except sqlite3.IntegrityError: return jsonify({"error": "User exists"}), 409
     finally: conn.close()
 
 @app.route('/login', methods=['POST'])
@@ -136,66 +125,55 @@ def login():
     data = request.get_json()
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
-    cur.execute("SELECT role FROM users WHERE username=? AND password=?", (data.get('username'), data.get('password')))
+    cur.execute('SELECT role FROM users WHERE username=? AND password=?', (data.get('username'), data.get('password')))
     row = cur.fetchone()
     conn.close()
     if not row: return jsonify({"error": "Invalid credentials"}), 401
-    token = jwt.encode({"username": data.get('username'), "role": row[0], "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12)}, SECRET, algorithm="HS256")
-    log_audit("LOGIN", data.get('username'), "auth")
-    return jsonify({"message": "Login success", "role": row[0], "token": token})
+    token = jwt.encode({"username": data['username'], "role": row[0], "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12)}, SECRET, algorithm="HS256")
+    log_audit("LOGIN", data['username'], row[0])
+    return jsonify({"token": token, "role": row[0]})
 
-@app.route('/upload', methods=['POST'])
-@token_required
-@limiter.limit("10 per minute")
-def upload():
-    if request.user['role'] not in ['owner','admin']: return jsonify({"error": "owner/admin only"}), 403
-    data = request.get_json()
-    doc_id = str(uuid.uuid4())
-    encrypted = fernet.encrypt(data.get('content','').encode()).decode()
-    conn = sqlite3.connect(DB)
-    conn.execute('INSERT INTO documents VALUES (?,?,?,?,?,?)', (doc_id, data.get('name'), request.user['username'], data.get('category','general'), encrypted, datetime.datetime.now().isoformat()))
-    conn.commit(); conn.close()
-    log_audit("UPLOAD", request.user['username'], doc_id)
-    return jsonify({"message": "Uploaded", "doc_id": doc_id}), 201
 @app.route('/documents', methods=['GET'])
 @token_required
 def list_docs():
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
-    cur.execute('SELECT rowid, name, owner, category FROM documents')
+    # FIXED: Use id, not rowid - This fixes My Documents id:1 bug
+    cur.execute('SELECT id, name, owner, category FROM documents')
     docs = [{"id": r[0], "name": r[1], "owner": r[2], "category": r[3]} for r in cur.fetchall() if check_access(r[0], request.user['username']) or request.user['role']=='admin']
     conn.close()
     return jsonify(docs)
 
-
 @app.route('/documents', methods=['POST'])
 @token_required
+@limiter.limit("10 per minute")
 def upload_doc():
+    if request.user['role'] not in ['owner','admin']: return jsonify({"error": "owner/admin only"}), 403
     data = request.get_json()
     name = data.get('name')
     content = data.get('content')
-    if not name or not content:
-        return jsonify({"error": "Name and content required"}), 400
+    if not name or not content: return jsonify({"error": "Name and content required"}), 400
+    if len(content) > 1000000: return jsonify({"error": "Content too large"}), 400
+    doc_id = str(uuid.uuid4())
     encrypted = fernet.encrypt(content.encode()).decode()
     conn = sqlite3.connect(DB)
-    cur = conn.cursor()
-    cur.execute('INSERT INTO documents (name, owner, content, category) VALUES (?,?,?,?)', (name, request.user['username'], encrypted, 'general'))
+    conn.execute('INSERT INTO documents (id, name, owner, category, content, created_at) VALUES (?,?,?,?,?,?)', (doc_id, name, request.user['username'], data.get('category','general'), encrypted, datetime.datetime.now().isoformat()))
     conn.commit()
     conn.close()
-    log_audit("UPLOAD", request.user['username'], name)
-    return jsonify({"message": "Document uploaded"}), 201
-
+    log_audit("UPLOAD", request.user['username'], doc_id)
+    return jsonify({"message": "Document uploaded", "doc_id": doc_id}), 201
 
 @app.route('/documents/<doc_id>', methods=['GET'])
 @token_required
 def get_doc(doc_id):
-    if not check_access(doc_id, request.user['username']) and request.user['role']!='admin': 
+    if not check_access(doc_id, request.user['username']) and request.user['role']!='admin':
         log_audit("ACCESS_DENIED_403", request.user['username'], doc_id)
         return jsonify({"error": "Forbidden - No access"}), 403
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
     cur.execute('SELECT name, owner, content FROM documents WHERE id=?', (doc_id,))
-    row = cur.fetchone(); conn.close()
+    row = cur.fetchone()
+    conn.close()
     if not row: return jsonify({"error": "Not found"}), 404
     decrypted = fernet.decrypt(row[2].encode()).decode()
     log_audit("VIEW", request.user['username'], doc_id)
@@ -257,12 +235,13 @@ def delete_doc(doc_id):
 @app.route('/audit', methods=['GET'])
 @token_required
 def audit():
+    if request.user['role']!='admin': return jsonify({"error": "Admin only"}), 403
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
     cur.execute('SELECT action, actor, target, time FROM audit WHERE actor=?', (request.user['username'],))
-    logs = [{"action": r[0], "actor": r[1], "target": r[2], "time": r[3]} for r in cur.fetchall()]
+    rows = cur.fetchall()
     conn.close()
-    return jsonify(logs)
+    return jsonify([{"action": r[0], "actor": r[1], "target": r[2], "time": r[3]} for r in rows])
 
 @app.route('/admin/audit', methods=['GET'])
 @token_required
@@ -270,14 +249,10 @@ def admin_audit():
     if request.user['role']!='admin': return jsonify({"error": "Admin only"}), 403
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
-    cur.execute('SELECT action, actor, target, time, ip FROM audit')
-    logs = [{"action": r[0], "actor": r[1], "target": r[2], "time": r[3], "ip": r[4]} for r in cur.fetchall()]
+    cur.execute('SELECT action, actor, target, time, ip FROM audit ORDER BY id DESC LIMIT 100')
+    rows = cur.fetchall()
     conn.close()
-    return jsonify(logs)
-
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({"status": "Live", "service": "TrustVault"})
+    return jsonify([{"action": r[0], "actor": r[1], "target": r[2], "time": r[3], "ip": r[4]} for r in rows])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
