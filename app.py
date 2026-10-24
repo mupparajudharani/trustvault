@@ -73,35 +73,40 @@ def home():
 <style>
 body{font-family:Arial;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f2f5;margin:0}
 .card{background:white;padding:30px;border-radius:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:400px}
-h1{color:#1a365d;margin:0} input{width:90%;padding:10px;margin:8px;border:1px solid #ccc;border-radius:6px}
+input,select{width:90%;padding:10px;margin:8px;border:1px solid #ccc;border-radius:6px}
 button{background:#1a365d;color:white;border:none;padding:10px 20px;border-radius:6px;margin:5px;cursor:pointer}
-#msg{margin-top:15px;font-weight:bold}
+#msg{margin-top:15px;font-weight:bold;min-height:20px;color:#333}
 </style></head>
 <body>
 <div class="card">
-<h1>TrustVault</h1>
-<h3>Secure Document Access</h3>
-<div id="forms">
-<input id="u" placeholder="Username">
-<input id="p" type="password" placeholder="Password">
-<select id="r" style="width:95%;padding:10px;margin:8px;border-radius:6px"><option value="viewer">viewer</option><option value="owner">owner</option><option value="admin">admin</option></select>
-<br>
-<button onclick="reg()">Register</button>
-<button onclick="log()">Login</button>
-</div>
-<div id="msg"></div>
-<small><br>API Status: <b style='color:green'>Live</b> | Roles: admin/owner/viewer</small>
+<h1>TrustVault</h1><h3>Secure Document Access</h3>
+<input id="u" placeholder="Username" value="dharani">
+<input id="p" type="password" placeholder="Password" value="dharani123">
+<select id="r"><option value="viewer">viewer</option><option value="owner">owner</option><option value="admin" selected>admin</option></select><br>
+<button onclick="reg()">Register</button><button onclick="log()">Login</button>
+<div id="msg">Enter details & click Register</div>
+<small><br>API Status: <b style='color:green'>Live</b></small>
 </div>
 <script>
 async function reg(){
- let res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('u').value,password:document.getElementById('p').value,role:document.getElementById('r').value})});
- let d=await res.json(); document.getElementById('msg').innerText=d.message||d.error; document.getElementById('msg').style.color=res.ok?'green':'red';
+ document.getElementById('msg').innerText='Registering...';
+ try{
+  let res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('u').value,password:document.getElementById('p').value,role:document.getElementById('r').value})});
+  let text=await res.text(); 
+  let d; try{d=JSON.parse(text)}catch(e){d={raw:text}}
+  document.getElementById('msg').innerText=(res.ok?'SUCCESS: ':'ERROR: ')+(d.message||d.error||d.raw||text);
+  document.getElementById('msg').style.color=res.ok?'green':'red';
+  console.log(d);
+ }catch(err){document.getElementById('msg').innerText='Fetch Error: '+err; document.getElementById('msg').style.color='red';}
 }
 async function log(){
- let res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('u').value,password:document.getElementById('p').value})});
- let d=await res.json(); 
- if(res.ok){document.getElementById('msg').innerText='Login Success! Token: '+d.token.substring(0,20)+'...'; document.getElementById('msg').style.color='green';}
- else{document.getElementById('msg').innerText=d.error; document.getElementById('msg').style.color='red';}
+ document.getElementById('msg').innerText='Logging in...';
+ try{
+  let res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('u').value,password:document.getElementById('p').value})});
+  let text=await res.text(); let d; try{d=JSON.parse(text)}catch(e){d={raw:text}}
+  document.getElementById('msg').innerText=(res.ok?'Login OK! Token: '+(d.token||'').substring(0,30):'ERROR: '+(d.error||d.raw));
+  document.getElementById('msg').style.color=res.ok?'green':'red';
+ }catch(err){document.getElementById('msg').innerText='Fetch Error: '+err;}
 }
 </script>
 </body></html>
