@@ -100,3 +100,15 @@ Response 200: {"message": "Deleted"}
 - 401 - No token / Invalid token
 - 403 - Access denied (Isolation working)
 - 404 - Doc not found
+
+### 8. GET /search?q=&owner=&category=
+Search documents - permission-checked, filters by owner/category
+Response: List of matching documents
+
+### 9. GET /audit and GET /admin/audit
+GET /audit - User's own actions
+GET /admin/audit - Admin only (403 if not admin) - Security test PASS
+
+### 10. POST /register
+Request: {"username": "user", "password": "pass", "role": "owner"}
+Response 200: {"message": "Registered"}
