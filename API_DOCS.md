@@ -12,15 +12,15 @@ Login and get JWT token
 
 Request:
 {
-  "username": "owner",
-  "password": "owner123"
+  "username": "dharani",
+  "password": "dharani123"
 }
 
 Response 200:
 {
   "token": "eyJ...",
-  "role": "owner",
-  "username": "owner"
+  "role": "admin",
+  "username": "dharani"
 }
 
 ### 2. POST /upload
@@ -51,7 +51,7 @@ Response:
   {
     "id": "doc_id",
     "name": "Contract.pdf",
-    "owner": "owner",
+    "owner": "dharani",
     "category": "legal"
   }
 ]
