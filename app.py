@@ -157,8 +157,18 @@ def upload():
     conn.commit(); conn.close()
     log_audit("UPLOAD", request.user['username'], doc_id)
     return jsonify({"message": "Uploaded", "doc_id": doc_id}), 201
-
 @app.route('/documents', methods=['GET'])
+@token_required
+def list_docs():
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    cur.execute('SELECT id, name, owner, category FROM documents')
+    docs = [{"id": r[0], "name": r[1], "owner": r[2], "category": r[3]} for r in cur.fetchall() if check_access(r[0], request.user['username']) or request.user['role']=='admin']
+    conn.close()
+    return jsonify(docs)
+
+
+@app.route('/documents', methods=['POST'])
 @token_required
 def upload_doc():
     data = request.get_json()
