@@ -67,7 +67,30 @@ def check_access(doc_id, username, role):
 
 @app.route("/")
 def home():
-    return jsonify({"message":"TrustVault API - Secure Document Sharing","roles":"admin/owner/viewer","status":"live"})
+    return """
+    <html>
+    <head><title>TrustVault</title>
+    <style>
+    body{font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f2f5;margin:0}
+    .card{background:white;padding:40px;border-radius:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:500px}
+    h1{color:#1a365d} p{color:#555}
+    button{background:#1a365d;color:white;border:none;padding:10px 20px;border-radius:6px;margin:5px;cursor:pointer;font-size:16px}
+    button:hover{background:#2a4a7d}
+    </style></head>
+    <body>
+    <div class="card">
+    <h1>TrustVault</h1>
+    <h2>Secure Document Access</h2>
+    <p>Your documents. Your permissions. Your control.</p>
+    <p>Secure document access with user authentication.</p>
+    <button onclick="location.href='/login'">Register</button>
+    <button onclick="location.href='/login'">Login</button>
+    <br><br>
+    <small>API Status: <b style='color:green'>Live</b> | Roles: admin/owner/viewer</small>
+    </div>
+    </body>
+    </html>
+    """
 
 @app.route("/login", methods=["POST"])
 def login():
