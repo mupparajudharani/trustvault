@@ -8,7 +8,6 @@ from flask_limiter.util import get_remote_address
 app = Flask(__name__)
 DB = 'trustvault.db'
 SECRET = os.environ.get('SECRET', 'trustvault-secret-key-2026')
-# FIXED: Static Fernet Key - Don't regenerate on every restart
 FERNET_KEY = os.environ.get('FERNET_KEY', b'KX5TP4p5lJ8vX3N7c2m9q0w1e2r3t4y5u6v7w8x9y0=')
 try:
     fernet = Fernet(FERNET_KEY)
