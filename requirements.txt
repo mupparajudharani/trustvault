@@ -1,2 +1,5 @@
 Flask
+PyJWT
+cryptography
+Flask-Limiter
 gunicorn
