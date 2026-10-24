@@ -1,51 +1,34 @@
-# TrustVault - Secure Document Access
+# TrustVault - Secure Document Vault 🔐
 
-🔴 Live: https://trustvault-2059.onrender.com
-📂 GitHub: https://github.com/mupparajudharani/trustvault
+> Secure document storage with encryption & role-based access control.
 
-## Features
-- User Register with Role: admin, owner, viewer
-- Secure Login with JWT & Role Check
-- Document Upload with Fernet Encryption
-- Permission System: Grant & Revoke Access
-- Search with Filters: ?q=&owner=&category=
-- Audit Trail: /audit and /admin/audit (admin-only 403 check)
-- Secure Delete: owner-only access control
-- Rate Limiting: Prevents brute-force attacks
+## 🔗 Important Links
+- **🌐 Live Website:** https://trustvault-2059.onrender.com
+- **💻 GitHub Repository:** https://github.com/mupparajudharani/trustvault
 
-## APIs (7 Endpoints)
-- POST /register - Register user
-- POST /login - Login & get JWT token
-- POST /upload - Upload document (owner/admin)
-- GET /documents - List documents (permission-checked)
-- GET /search?q=&owner=&category= - Search documents
-- POST /grant - Grant access to viewer
-- POST /revoke - Revoke access
-- GET /audit - User audit trail
-- GET /admin/audit - Admin audit (admin-only)
-- DELETE /documents/:id - Delete (owner-only)
-- GET /health - Health check
+## 🔑 Demo Login for Evaluation
+- **Username:** `dharani`
+- **Password:** `dharani123`
+- **Role:** `admin`
 
-## Tech
-- Flask + SQLite + SQLAlchemy
-- JWT Authentication
-- Fernet Symmetric Encryption
-- Flask-Limiter (Rate Limiting)
-- Render Deployment + Gunicorn
+## ✅ Features Implemented & Working
+- [x] User Login with JWT Authentication
+- [x] Secure Token (Live Status)
+- [x] Encrypted Document Upload
+- [x] My Documents - View & List (ID Fixed)
+- [x] Owner Based Access Control
+- [x] Deployed on Render (Live)
 
-## Test Credentials
-- Username: owner1 / Password: owner123 - Role: owner
-- Username: viewer1 / Password: viewer123 - Role: viewer
-- Username: admin / Password: admin123 - Role: admin
+## 🛠️ Tech Stack
+- **Backend:** Python Flask
+- **Frontend:** HTML, JS
+- **Database:** SQLite (with rowid)
+- **Encryption:** Fernet (Cryptography)
+- **Deployment:** Render Cloud
 
-## Security Tests - PASSED ✅
-- Viewer without grant = 403 Forbidden
-- Viewer after grant = 200 OK
-- Viewer after revoke = 403 Forbidden
-- Admin audit without admin role = 403
-- Owner delete = 200, Viewer delete = 403
+## 📸 Screenshots
+- Login Success - Welcome admin: dharani
+- Upload Success - Document uploaded
+- My Documents - id: 1, My Aadhar, owner: dharani
 
-## Roles
-- admin = full access + audit
-- owner = upload + grant/revoke + delete own docs
-- viewer = view only if granted
+**Status:** 🟢 Live & Working
