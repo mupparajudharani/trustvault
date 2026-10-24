@@ -65,33 +65,47 @@ def check_access(doc_id, username, role):
     con.close()
     return has
 
-@app.route("/")
+@app.route('/')
 def home():
     return """
-    <html>
-    <head><title>TrustVault</title>
-    <style>
-    body{font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f2f5;margin:0}
-    .card{background:white;padding:40px;border-radius:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:500px}
-    h1{color:#1a365d} p{color:#555}
-    button{background:#1a365d;color:white;border:none;padding:10px 20px;border-radius:6px;margin:5px;cursor:pointer;font-size:16px}
-    button:hover{background:#2a4a7d}
-    </style></head>
-    <body>
-    <div class="card">
-    <h1>TrustVault</h1>
-    <h2>Secure Document Access</h2>
-    <p>Your documents. Your permissions. Your control.</p>
-    <p>Secure document access with user authentication.</p>
-    <button onclick="location.href='/login'">Register</button>
-    <button onclick="location.href='/login'">Login</button>
-    <br><br>
-    <small>API Status: <b style='color:green'>Live</b> | Roles: admin/owner/viewer</small>
-    </div>
-    </body>
-    </html>
+<!DOCTYPE html>
+<html><head><title>TrustVault</title>
+<style>
+body{font-family:Arial;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f2f5;margin:0}
+.card{background:white;padding:30px;border-radius:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:400px}
+h1{color:#1a365d;margin:0} input{width:90%;padding:10px;margin:8px;border:1px solid #ccc;border-radius:6px}
+button{background:#1a365d;color:white;border:none;padding:10px 20px;border-radius:6px;margin:5px;cursor:pointer}
+#msg{margin-top:15px;font-weight:bold}
+</style></head>
+<body>
+<div class="card">
+<h1>TrustVault</h1>
+<h3>Secure Document Access</h3>
+<div id="forms">
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
+<select id="r" style="width:95%;padding:10px;margin:8px;border-radius:6px"><option value="viewer">viewer</option><option value="owner">owner</option><option value="admin">admin</option></select>
+<br>
+<button onclick="reg()">Register</button>
+<button onclick="log()">Login</button>
+</div>
+<div id="msg"></div>
+<small><br>API Status: <b style='color:green'>Live</b> | Roles: admin/owner/viewer</small>
+</div>
+<script>
+async function reg(){
+ let res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('u').value,password:document.getElementById('p').value,role:document.getElementById('r').value})});
+ let d=await res.json(); document.getElementById('msg').innerText=d.message||d.error; document.getElementById('msg').style.color=res.ok?'green':'red';
+}
+async function log(){
+ let res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('u').value,password:document.getElementById('p').value})});
+ let d=await res.json(); 
+ if(res.ok){document.getElementById('msg').innerText='Login Success! Token: '+d.token.substring(0,20)+'...'; document.getElementById('msg').style.color='green';}
+ else{document.getElementById('msg').innerText=d.error; document.getElementById('msg').style.color='red';}
+}
+</script>
+</body></html>
     """
-
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
