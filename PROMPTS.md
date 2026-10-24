@@ -10,7 +10,7 @@
 **Date:** 2026-10-21
 **Prompt:** Fix JWT auth - owner/admin access control, viewer isolation test
 **AI Response:** Fixed JWT decode issue, added role check for upload and delete owner-only. Tested viewer 403 isolation.
-**Commit:** https://github.com/mupparajudharani/trustvault/commits/main - [Day 1 - JWT Auth Fix Evening] 
+**Commit:** https://github.com/mupparajudharani/trustvault/commits/main - [Day 1 - JWT Auth Fix Evening]
 
 ## Entry 3 - 2026-10-21 - Rate Limiting Security [THREAT MITIGATION]
 **Date:** 2026-10-21
