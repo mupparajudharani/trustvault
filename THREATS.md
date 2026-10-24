@@ -51,12 +51,14 @@ Residual: Low
 ## THREAT-10: Token Theft / No Expiry
 Likelihood: Medium | Impact: High
 Mitigation: JWT expiry 12 hours, stored client side only. CORS enabled but Authorization header required. Audit logs IP for anomaly detection. Future: refresh tokens, HTTPS only, rate limit on login.
-Residual: Medium - Need rate limiting
+Residual: Low - Mitigated with Flask-Limiter 5/min login, 10/min upload
 
 ## What I did NOT mitigate (Deliberate)
-- Rate limiting / DDoS - Not in scope for MVP
 - Encryption at rest - SQLite file not encrypted, would need extra layer
 - Full-text content search - Only name/owner/category/date per spec
+
+## What I DID mitigate extra (Bonus)
+- Rate limiting / DDoS - Implemented with Flask-Limiter 5/min login, 10/min upload - PASS ✅
 
 ## How Threats Drove Code
 Every endpoint starts with token_required then check_access or owner check. No endpoint trusts username from body. All security decisions server-side.
