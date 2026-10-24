@@ -82,11 +82,38 @@ document.getElementById('msg').innerText=(res.ok?'SUCCESS: ':'ERROR: ')+(d.messa
 document.getElementById('msg').style.color=res.ok?'green':'red';
 }
 async function log(){
-document.getElementById('msg').innerText='Logging...';
-let res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value,password:p.value})});
-let d=await res.json();
-document.getElementById('msg').innerText=res.ok?'Login SUCCESS! Role: '+d.role:'ERROR: '+d.error;
-document.getElementById('msg').style.color=res.ok?'green':'red';
+  document.getElementById('msg').innerText='Logging ...';
+  let res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value,password:p.value,role:r.value})});
+  let d=await res.json();
+  if(res.ok && d.token){
+    localStorage.setItem('token', d.token);
+    document.body.innerHTML = `
+      <div style="padding:20px;font-family:Arial">
+        <h2>TrustVault - Welcome ${d.role}: ${u.value}</h2>
+        <p>Token: ${d.token.substring(0,20)}... <b style="color:green">Live</b></p>
+        <button onclick="loadDocs()">My Documents</button>
+        <button onclick="localStorage.clear();location.reload()">Logout</button>
+        <hr>
+        <h3>Upload Document</h3>
+        <input id="docName" placeholder="Doc name" style="padding:8px">
+        <input id="docContent" placeholder="Content" style="padding:8px">
+        <button onclick="uploadDoc()">Upload</button>
+        <div id="docs" style="margin-top:20px"></div>
+      </div>
+    `;
+  } else {
+    document.getElementById('msg').innerText='ERROR: '+(d.error||'Failed');
+    document.getElementById('msg').style.color='red';
+  }
+}
+async function loadDocs(){
+  let res=await fetch('/documents',{headers:{'Authorization':'Bearer '+localStorage.getItem('token')}});
+  let j=await res.json();
+  document.getElementById('docs').innerHTML="<pre>"+JSON.stringify(j,null,2)+"</pre>";
+}
+async function uploadDoc(){
+  let res=await fetch('/documents',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')},body:JSON.stringify({name:document.getElementById('docName').value, content:document.getElementById('docContent').value})});
+  alert(await res.text()); loadDocs();
 }
 </script></body></html>"""
 
