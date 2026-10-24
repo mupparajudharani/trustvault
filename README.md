@@ -1,23 +1,23 @@
-# TrustVault - Secure Document Sharing
+# TrustVault - Secure Document Access
 
-Live URL: https://trustvault-2059.onrender.com
+🔴 Live: https://trustvault-2059.onrender.com
 
-## Test Accounts
-Password for all: password123
+## Features
+- User Register with Role: admin, owner, viewer
+- Secure Login & Role Check
+- APIs: /register, /login, /health
+- SQLite Database
 
-- Admin: admin@trustvault.com / password123
-- Owner: owner@trustvault.com / password123
-- Viewer: viewer@trustvault.com / password123
+## Tech
+- Flask + SQLite + Render
 
-## Setup
-git clone https://github.com/mupparajudharani/trustvault.git
-pip install -r requirements.txt
-python app.py
+## Test Credentials
+- Username: dharani
+- Password: dharani123
+- Role: admin
+- Result: Register SUCCESS & Login SUCCESS
 
-## API Docs
-See API_DOCS.md - Owner can grant/revoke, Viewer only reads if granted, Admin sees audit logs.
-
-## Security
-- Server checks permission on every download
-- Denied attempts logged in audit trail
-- No access = 403
+## Roles
+- admin = full access
+- owner = upload docs
+- viewer = view only
