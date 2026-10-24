@@ -160,13 +160,21 @@ def upload():
 
 @app.route('/documents', methods=['GET'])
 @token_required
-def list_docs():
+def upload_doc():
+    data = request.get_json()
+    name = data.get('name')
+    content = data.get('content')
+    if not name or not content:
+        return jsonify({"error": "Name and content required"}), 400
+    encrypted = fernet.encrypt(content.encode()).decode()
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
-    cur.execute('SELECT id, name, owner, category FROM documents')
-    docs = [{"id": r[0], "name": r[1], "owner": r[2], "category": r[3]} for r in cur.fetchall() if check_access(r[0], request.user['username']) or request.user['role']=='admin']
+    cur.execute('INSERT INTO documents (name, owner, content, category) VALUES (?,?,?,?)', (name, request.user['username'], encrypted, 'general'))
+    conn.commit()
     conn.close()
-    return jsonify(docs)
+    log_audit("UPLOAD", request.user['username'], name)
+    return jsonify({"message": "Document uploaded"}), 201
+
 
 @app.route('/documents/<doc_id>', methods=['GET'])
 @token_required
